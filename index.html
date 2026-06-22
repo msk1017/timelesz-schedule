@@ -3,66 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Schedule</title>
+<title>Schedule App</title>
 <style>
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  background:linear-gradient(135deg,#fdfcfb,#f7f2ee);
+  background:linear-gradient(135deg,#f7f5f2,#ffffff);
   color:#333;
 }
 /* ヘッダー */
 .header{
   text-align:center;
-  font-size:22px;
+  padding:15px;
+  font-size:20px;
   font-weight:300;
-  padding:18px;
-  letter-spacing:1px;
+}
+/* 月ナビ */
+.month-bar{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:15px;
+  margin-bottom:10px;
+}
+.month-bar button{
+  border:none;
+  background:#fff;
+  padding:6px 12px;
+  border-radius:999px;
+  box-shadow:0 3px 10px rgba(0,0,0,.1);
+  cursor:pointer;
 }
 /* フィルター */
 .filter{
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
-  gap:8px;
+  gap:6px;
   padding:10px;
 }
 .filter button{
   border:none;
-  padding:6px 12px;
+  padding:6px 10px;
   border-radius:999px;
   background:#fff;
-  box-shadow:0 3px 10px rgba(0,0,0,.08);
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
   cursor:pointer;
   font-size:12px;
-  transition:.2s;
-}
-.filter button:hover{
-  transform:scale(1.05);
 }
 /* カレンダー */
 .calendar{
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  gap:8px;
+  gap:6px;
   padding:10px;
 }
 .day{
   background:#fff;
-  border-radius:16px;
-  min-height:85px;
-  padding:6px;
-  box-shadow:0 5px 15px rgba(0,0,0,.06);
+  min-height:80px;
+  border-radius:14px;
+  padding:5px;
+  font-size:12px;
   cursor:pointer;
-  transition:.2s;
-  position:relative;
+  box-shadow:0 4px 12px rgba(0,0,0,.06);
 }
-.day:hover{
-  transform:translateY(-3px);
-}
-.date{
-  font-size:13px;
-  font-weight:600;
+.today{
+  outline:2px solid #ffccaa;
 }
 /* ドット */
 .dot{
@@ -77,16 +83,15 @@ body{
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.45);
+  background:rgba(0,0,0,.4);
   justify-content:center;
   align-items:center;
 }
 .modal-box{
   background:#fff;
-  width:85%;
-  border-radius:16px;
   padding:15px;
-  box-shadow:0 10px 30px rgba(0,0,0,.2);
+  border-radius:14px;
+  width:85%;
 }
 input,select{
   width:100%;
@@ -100,18 +105,20 @@ button.save{
   padding:10px;
   border:none;
   border-radius:10px;
-  background:linear-gradient(135deg,#333,#666);
+  background:#333;
   color:#fff;
-  font-weight:bold;
-  cursor:pointer;
 }
 </style>
 </head>
 <body>
 <div class="header">Schedule</div>
+<div class="month-bar">
+  <button onclick="changeMonth(-1)">←</button>
+  <div id="monthLabel"></div>
+  <button onclick="changeMonth(1)">→</button>
+</div>
 <div class="filter" id="filter"></div>
 <div class="calendar" id="calendar"></div>
-<!-- モーダル -->
 <div class="modal" id="modal">
   <div class="modal-box">
     <div id="selectedDate"></div>
@@ -134,6 +141,7 @@ const members = {
 let schedules = JSON.parse(localStorage.getItem("schedule") || "{}");
 let filter = "all";
 let selectedDate = "";
+let current = new Date();
 function save(){
  localStorage.setItem("schedule",JSON.stringify(schedules));
 }
@@ -148,31 +156,35 @@ function buildFilter(){
  }
  document.getElementById("filter").innerHTML = html;
 }
+function changeMonth(n){
+ current.setMonth(current.getMonth()+n);
+ render();
+}
 function render(){
- let cal = document.getElementById("calendar");
- cal.innerHTML="";
- let now = new Date();
- let y = now.getFullYear();
- let m = now.getMonth();
- let first = new Date(y,m,1).getDay();
- let last = new Date(y,m+1,0).getDate();
- for(let i=0;i<first;i++) cal.innerHTML += `<div></div>`;
- for(let d=1; d<=last; d++){
- let key = `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
- let events = schedules[key] || [];
- if(filter!="all"){
-  events = events.filter(e=>e.member==filter);
- }
- let dots="";
- events.forEach(e=>{
-  dots += `<span class="dot" style="background:${members[e.member]}"></span>`;
- });
- cal.innerHTML += `
- <div class="day" onclick="openModal('${key}')">
- <div class="date">${d}</div>
- <div>${dots}</div>
- </div>`;
- }
+let cal = document.getElementById("calendar");
+cal.innerHTML="";
+let y = current.getFullYear();
+let m = current.getMonth();
+document.getElementById("monthLabel").innerText = `${y} / ${m+1}`;
+let first = new Date(y,m,1).getDay();
+let last = new Date(y,m+1,0).getDate();
+for(let i=0;i<first;i++) cal.innerHTML += `<div></div>`;
+for(let d=1; d<=last; d++){
+let key = `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+let events = schedules[key] || [];
+if(filter!="all"){
+ events = events.filter(e=>e.member==filter);
+}
+let dots="";
+events.forEach(e=>{
+ dots += `<span class="dot" style="background:${members[e.member]}"></span>`;
+});
+cal.innerHTML += `
+<div class="day" onclick="openModal('${key}')">
+<div>${d}</div>
+<div>${dots}</div>
+</div>`;
+}
 }
 function openModal(date){
  selectedDate = date;
@@ -191,9 +203,6 @@ function addEvent(){
  schedules[selectedDate].push({member:m,title:t});
  save();
  render();
- closeModal();
-}
-function closeModal(){
  document.getElementById("modal").style.display="none";
 }
 buildFilter();
