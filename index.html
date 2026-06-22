@@ -10,17 +10,20 @@ body{
   font-family:-apple-system,sans-serif;
   background:#f7f5f2;
 }
+
 .header{
   text-align:center;
   padding:15px;
   font-size:20px;
 }
+
 .month-bar{
   display:flex;
   justify-content:center;
   align-items:center;
   gap:10px;
 }
+
 button{
   border:none;
   padding:6px 10px;
@@ -29,6 +32,7 @@ button{
   box-shadow:0 2px 8px rgba(0,0,0,.1);
   cursor:pointer;
 }
+
 .filter{
   display:flex;
   flex-wrap:wrap;
@@ -36,12 +40,14 @@ button{
   gap:6px;
   padding:10px;
 }
+
 .calendar{
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:6px;
   padding:10px;
 }
+
 .day{
   background:#fff;
   min-height:80px;
@@ -49,6 +55,7 @@ button{
   padding:5px;
   cursor:pointer;
 }
+
 .dot{
   width:7px;
   height:7px;
@@ -56,6 +63,7 @@ button{
   display:inline-block;
   margin:1px;
 }
+
 /* モーダル */
 .modal{
   display:none;
@@ -65,18 +73,21 @@ button{
   justify-content:center;
   align-items:center;
 }
+
 .modal-box{
   background:#fff;
   padding:15px;
   border-radius:14px;
   width:85%;
 }
+
 .event{
   display:flex;
   justify-content:space-between;
   padding:6px;
   border-bottom:1px solid #eee;
 }
+
 .del{
   color:red;
   cursor:pointer;
@@ -96,9 +107,6 @@ button{
 <div class="modal-box">
 <div id="selectedDate"></div>
 <div id="events"></div>
-
-追加
-
 </div>
 </div>
 <script>
@@ -112,28 +120,39 @@ const members = {
  "Shuto":"#ffe38a",
  "Shino":"#e0e0e0"
 };
+
 let schedules = JSON.parse(localStorage.getItem("schedule") || "{}");
 let current = new Date();
 let selectedDate = "";
+
 function save(){
  localStorage.setItem("schedule",JSON.stringify(schedules));
 }
+
 function render(){
  let cal = document.getElementById("calendar");
  cal.innerHTML="";
+
  let y=current.getFullYear();
  let m=current.getMonth();
+
  document.getElementById("monthLabel").innerText=`${y}/${m+1}`;
+
  let first=new Date(y,m,1).getDay();
  let last=new Date(y,m+1,0).getDate();
+
  for(let i=0;i<first;i++) cal.innerHTML+="<div></div>";
+
  for(let d=1; d<=last; d++){
+
  let key=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
  let events=schedules[key]||[];
+
  let dots="";
  events.forEach(e=>{
  dots+=`<span class="dot" style="background:${members[e.member]}"></span>`;
  });
+
  cal.innerHTML+=`
  <div class="day" onclick="openModal('${key}')">
  <div>${d}</div>
@@ -141,11 +160,14 @@ function render(){
  </div>`;
  }
 }
+
 function openModal(date){
  selectedDate=date;
  document.getElementById("selectedDate").innerText=date;
+
  let html="";
  let events=schedules[date]||[];
+
  events.forEach((e,i)=>{
  html+=`
  <div class="event">
@@ -154,29 +176,37 @@ function openModal(date){
  </div>
  `;
  });
+
  document.getElementById("events").innerHTML=html;
+
  let sel=document.getElementById("member");
  sel.innerHTML="";
  for(let m in members){
  sel.innerHTML+=`<option value="${m}">${m}</option>`;
  }
+
  document.getElementById("modal").style.display="flex";
 }
+
 function addEvent(){
  let m=document.getElementById("member").value;
  let t=document.getElementById("title").value;
+
  if(!schedules[selectedDate]) schedules[selectedDate]=[];
+
  schedules[selectedDate].push({member:m,title:t});
  save();
  render();
  openModal(selectedDate);
 }
+
 function del(i){
  schedules[selectedDate].splice(i,1);
  save();
  render();
  openModal(selectedDate);
 }
+
 render();
 </script>
 </body>
