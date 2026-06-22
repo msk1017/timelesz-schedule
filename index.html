@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schedule</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  background: linear-gradient(135deg,#fff,#f7f3ee);
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  padding:20px;
+  color:#444;
+}
+
+/* タイトル */
+.logo{
+  text-align:center;
+  font-size:28px;
+  font-weight:300;
+  margin-bottom:20px;
+}
+
+/* ヘッダー */
+.header{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.month{
+  font-size:20px;
+  font-weight:500;
+}
+
+button{
+  padding:6px 12px;
+  border-radius:12px;
+  border:none;
+  background:#fff;
+  box-shadow:0 4px 10px rgba(0,0,0,0.08);
+  cursor:pointer;
+}
+
+/* フィルター */
+.filter{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:6px;
+  margin:10px 0 15px;
+}
+
+.filter button{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+}
+
+/* カレンダー */
+.calendar{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
+}
+
+.day{
+  background:#fff;
+  border-radius:18px;
+  min-height:120px;
+  padding:10px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.06);
+  cursor:pointer;
+  transition:0.2s;
+  border:2px solid #eee;
+}
+
+.day:hover{
+  transform:translateY(-3px);
+}
+
+/* 今日 */
+.today{
+  border:2px solid #e8d9c8;
+}
+
+/* 日付 */
+.date{
+  font-size:14px;
+  font-weight:600;
+}
+
+/* ドット */
+.dots{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  margin-top:8px;
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+}
+
+/* 件数 */
+.event-count{
+  margin-top:6px;
+  font-size:11px;
+  color:#777;
+}
+
+/* 名前タグ */
+.name-tag{
+  display:inline-block;
+  font-size:11px;
+  font-weight:600;
+  padding:3px 8px;
+  border-radius:999px;
+  margin:3px 4px 0 0;
+  border:2px solid;
+  background:#fafafa;
+}
+
+/* モーダル */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  justify-content:center;
+  align-items:center;
+}
+
+.modal-content{
+  background:#fff;
+  width:90%;
+  max-width:400px;
+  border-radius:20px;
+  padding:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.12);
+}
+
+/* カード */
+.event-card{
+  background:#fafafa;
+  border-radius:12px;
+  padding:10px;
+  margin-bottom:8px;
+  border-left:4px solid #ddd;
+}
+
+.member{
+  font-size:12px;
+  font-weight:600;
+}
+
+.title{
+  font-size:13px;
+  color:#555;
+}
+</style>
+</head>
+
+<body>
+
+<div class="logo">Schedule</div>
+
+<div class="header">
+<button onclick="changeMonth(-1)">←</button>
+<div class="month" id="monthLabel"></div>
+<button onclick="changeMonth(1)">→</button>
+</div>
+
+<div class="filter" id="filter"></div>
+
+<div class="calendar" id="calendar"></div>
+
+<div class="modal" id="modal">
+<div class="modal-content">
+<h3 id="modalDate"></h3>
+<div id="modalEvents"></div>
+</div>
+</div>
+
+<script>
+
+/* 🌈メンカラ */
+const members = {
+"Shori":"#ff9aa2",
+"Fuma":"#cdb4ff",
+"So":"#a8e6a3",
+"Takuto":"#9fdfff",
+"Haruka":"#bff7a1",
+"Masaki":"#ffb3d6",
+"Shuto":"#ffe38a",
+"Shino":"#e0e0e0"
+};
+
+/* スケジュール */
+const schedules = {
+"2026-07-03":[
+{member:"Fuma",title:"TV appearance"},
+{member:"So",title:"Magazine"}
+],
+"2026-07-06":[
+{member:"Shino",title:"Movie event"},
+{member:"Shuto",title:"Fan meeting"}
+],
+"2026-07-15":[
+{member:"Masaki",title:"Radio"}
+]
+};
+
+let current = new Date();
+let filterMember = "all";
+
+/* フィルター */
+function buildFilter(){
+
+const wrap = document.getElementById("filter");
+
+let html = `<button onclick="setFilter('all')">ALL</button>`;
+
+for(const name in members){
+html += `<button onclick="setFilter('${name}')">${name}</button>`;
+}
+
+wrap.innerHTML = html;
+}
+
+function setFilter(name){
+filterMember = name;
+renderCalendar();
+}
+
+buildFilter();
+
+/* カレンダー */
+function renderCalendar(){
+
+const year = current.getFullYear();
+const month = current.getMonth();
+
+document.getElementById("monthLabel").textContent =
+`${year} / ${month+1}`;
+
+const cal = document.getElementById("calendar");
+cal.innerHTML="";
+
+const firstDay = new Date(year,month,1).getDay();
+const lastDate = new Date(year,month+1,0).getDate();
+
+for(let i=0;i<firstDay;i++){
+cal.innerHTML+="<div></div>";
+}
+
+for(let d=1; d<=lastDate; d++){
+
+const key =
+`${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+
+let events = schedules[key] || [];
+
+if(filterMember !== "all"){
+events = events.filter(e => e.member === filterMember);
+}
+
+const div = document.createElement("div");
+div.className="day";
+
+/* 今日 */
+const today = new Date();
+if(year===today.getFullYear() && month===today.getMonth() && d===today.getDate()){
+div.classList.add("today");
+}
+
+/* ドット */
+let dots="";
+events.forEach(e=>{
+dots += `<div class="dot" style="background:${members[e.member]}"></div>`;
+});
+
+/* 名前タグ（修正済み） */
+let names = "";
+
+const uniqueMembers = [...new Set(events.map(e=>e.member))];
+
+uniqueMembers.forEach(m=>{
+names += `
+<span class="name-tag"
+style="border-color:${members[m]}; color:${members[m]};">
+${m}
+</span>`;
+});
+
+div.innerHTML=`
+<div class="date">${d}</div>
+<div class="dots">${dots}</div>
+<div class="event-count">${events.length ? events.length+"件" : ""}</div>
+<div>${names}</div>
+`;
+
+div.onclick=()=>openModal(key,events);
+
+cal.appendChild(div);
+}
+}
+
+/* モーダル */
+function openModal(date,events){
+
+document.getElementById("modalDate").textContent = date;
+
+let html="";
+
+if(!events.length){
+html="予定はありません";
+}else{
+events.forEach(e=>{
+html+=`
+<div class="event-card" style="border-left:4px solid ${members[e.member]}">
+<div class="member">${e.member}</div>
+<div class="title">${e.title}</div>
+</div>
+`;
+});
+}
+
+document.getElementById("modalEvents").innerHTML = html;
+document.getElementById("modal").style.display="flex";
+}
+
+/* 月移動 */
+function changeMonth(n){
+current.setMonth(current.getMonth()+n);
+renderCalendar();
+}
+
+renderCalendar();
+
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
+
+</body>
+</html>
