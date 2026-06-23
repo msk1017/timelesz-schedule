@@ -3,200 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Schedule App</title>
+<title>Schedule</title>
+
 <style>
-body{
-  margin:0;
-  font-family:-apple-system,sans-serif;
-  background:#f7f5f2;
-}
-
-.header{
-  text-align:center;
-  padding:15px;
-  font-size:20px;
-}
-
-.month-bar{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:10px;
-}
-
-button{
-  border:none;
-  padding:6px 10px;
-  border-radius:999px;
-  background:#fff;
-  box-shadow:0 2px 8px rgba(0,0,0,.1);
-  cursor:pointer;
-}
-
-.filter{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:6px;
-  padding:10px;
-}
-
-.calendar{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:6px;
-  padding:10px;
-}
-
-.day{
-  background:#fff;
-  min-height:80px;
-  border-radius:12px;
-  padding:5px;
-  cursor:pointer;
-}
-
-.dot{
-  width:7px;
-  height:7px;
-  border-radius:50%;
-  display:inline-block;
-  margin:1px;
-}
-
-/* モーダル */
-.modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.4);
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
-}
-
-.modal-box{
-  background:#fff;
-  padding:15px;
-  border-radius:14px;
-  width:85%;
-  position:relative;
-  z-index:10000;
-}
-.modal *{
-  pointer-events:auto
-}
-
-.event{
-  display:flex;
-  justify-content:space-between;
-  padding:6px;
-  border-bottom:1px solid #eee;
-}
-
-.del{
-  color:red;
-  cursor:pointer;
-}
+body{font-family:sans-serif;margin:0;background:#f5f5f5}
+.header{text-align:center;padding:10px;font-size:20px}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:10px}
+.day{background:#fff;padding:10px;min-height:60px;border-radius:8px;cursor:pointer}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);justify-content:center;align-items:center}
+.modal-box{background:#fff;padding:15px;border-radius:10px;width:80%}
 </style>
 </head>
+
 <body>
+
 <div class="header">Schedule</div>
-<div class="month-bar">
-<button onclick="changeMonth(-1)">←</button>
-<div id="monthLabel"></div>
-<button onclick="changeMonth(1)">→</button>
-</div>
-<div class="filter" id="filter"></div>
+
 <div class="calendar" id="calendar"></div>
+
 <div class="modal" id="modal">
-<div class="modal-box">
-<div id="selectedDate"></div>
-<div id="events"></div>
+  <div class="modal-box">
+    <div id="date"></div>
+    <select id="member">
+      <option>Shori</option>
+      <option>Fuma</option>
+      <option>So</option>
+    </select>
+    <input id="title" placeholder="予定">
+    <button onclick="add()">追加</button>
+  </div>
 </div>
-</div>
+
 <script>
-const members = {
- "Shori":"#ff9aa2",
- "Fuma":"#cdb4ff",
- "So":"#a8e6a3",
- "Takuto":"#9fdfff",
- "Haruka":"#bff7a1",
- "Masaki":"#ffb3d6",
- "Shuto":"#ffe38a",
- "Shino":"#e0e0e0"
-};
+let selected="";
+let data={};
 
-let schedules = JSON.parse(localStorage.getItem("schedule") || "{}");
-let selectedDate = "";
-
-function save(){
- localStorage.setItem("schedule",JSON.stringify(schedules));
-}
-
-function render(){}
-
-function openModal(date){
- selectedDate = date;
-
- let modal = document.getElementById("modal");
- modal.style.display = "flex";
-
- let box = document.querySelector(".modal-box");
-
- box.innerHTML = `
- <div id="selectedDate">${date}</div>
-
- <select id="member">
- ${Object.keys(members).map(m=>`<option value="${m}">${m}</option>`).join("")}
- </select>
-
- <input id="title" placeholder="予定">
-
- <button onclick="addEvent()">追加</button>
-
- <div id="list"></div>
- `;
-
- showList();
-}
-
-function showList(){
- let list = document.getElementById("list");
- let events = schedules[selectedDate] || [];
-
- list.innerHTML = events.map((e,i)=>`
- <div>
- ${e.member} - ${e.title}
- <button onclick="del(${i})">削除</button>
- </div>
- `).join("");
-}
-
-function addEvent(){
- let m = document.getElementById("member").value;
- let t = document.getElementById("title").value;
-
- if(!schedules[selectedDate]) schedules[selectedDate]=[];
-
- schedules[selectedDate].push({member:m,title:t});
- save();
- showList();
-}
-
-function del(i){
- schedules[selectedDate].splice(i,1);
- save();
- showList();
-}
-
-document.getElementById("modal").onclick = function(e){
- if(e.target.id === "modal"){
-  document.getElementById("modal").style.display="none";
+function render(){
+ let cal=document.getElementById("calendar");
+ for(let i=1;i<=30;i++){
+  cal.innerHTML+=`<div class="day" onclick="openM(${i})">${i}</div>`;
  }
+}
+
+function openM(d){
+ selected=d;
+ document.getElementById("date").innerText=d;
+ document.getElementById("modal").style.display="flex";
+}
+
+function add(){
+ let m=document.getElementById("member").value;
+ let t=document.getElementById("title").value;
+ if(!data[selected]) data[selected]=[];
+ data[selected].push(m+" "+t);
+ alert("追加した");
+ document.getElementById("modal").style.display="none";
 }
 
 render();
 </script>
+
 </body>
 </html>
