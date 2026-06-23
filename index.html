@@ -128,89 +128,72 @@ const members = {
 };
 
 let schedules = JSON.parse(localStorage.getItem("schedule") || "{}");
-let current = new Date();
 let selectedDate = "";
 
 function save(){
  localStorage.setItem("schedule",JSON.stringify(schedules));
 }
 
-function render(){
- let cal = document.getElementById("calendar");
- cal.innerHTML="";
-
- let y=current.getFullYear();
- let m=current.getMonth();
-
- document.getElementById("monthLabel").innerText=`${y}/${m+1}`;
-
- let first=new Date(y,m,1).getDay();
- let last=new Date(y,m+1,0).getDate();
-
- for(let i=0;i<first;i++) cal.innerHTML+="<div></div>";
-
- for(let d=1; d<=last; d++){
-
- let key=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
- let events=schedules[key]||[];
-
- let dots="";
- events.forEach(e=>{
- dots+=`<span class="dot" style="background:${members[e.member]}"></span>`;
- });
-
- cal.innerHTML+=`
- <div class="day" onclick="openModal('${key}')">
- <div>${d}</div>
- <div>${dots}</div>
- </div>`;
- }
-}
+function render(){}
 
 function openModal(date){
- selectedDate=date;
- document.getElementById("selectedDate").innerText=date;
+ selectedDate = date;
 
- let html="";
- let events=schedules[date]||[];
+ let modal = document.getElementById("modal");
+ modal.style.display = "flex";
 
- events.forEach((e,i)=>{
- html+=`
- <div class="event">
- ${e.member} - ${e.title}
- <span class="del" onclick="del(${i})">削除</span>
- </div>
+ let box = document.querySelector(".modal-box");
+
+ box.innerHTML = `
+ <div id="selectedDate">${date}</div>
+
+ <select id="member">
+ ${Object.keys(members).map(m=>`<option value="${m}">${m}</option>`).join("")}
+ </select>
+
+ <input id="title" placeholder="予定">
+
+ <button onclick="addEvent()">追加</button>
+
+ <div id="list"></div>
  `;
- });
 
- document.getElementById("events").innerHTML=html;
+ showList();
+}
 
- let sel=document.getElementById("member");
- sel.innerHTML="";
- for(let m in members){
- sel.innerHTML+=`<option value="${m}">${m}</option>`;
- }
+function showList(){
+ let list = document.getElementById("list");
+ let events = schedules[selectedDate] || [];
 
- document.getElementById("modal").style.display="flex";
+ list.innerHTML = events.map((e,i)=>`
+ <div>
+ ${e.member} - ${e.title}
+ <button onclick="del(${i})">削除</button>
+ </div>
+ `).join("");
 }
 
 function addEvent(){
- let m=document.getElementById("member").value;
- let t=document.getElementById("title").value;
+ let m = document.getElementById("member").value;
+ let t = document.getElementById("title").value;
 
  if(!schedules[selectedDate]) schedules[selectedDate]=[];
 
  schedules[selectedDate].push({member:m,title:t});
  save();
- render();
- openModal(selectedDate);
+ showList();
 }
 
 function del(i){
  schedules[selectedDate].splice(i,1);
  save();
- render();
- openModal(selectedDate);
+ showList();
+}
+
+document.getElementById("modal").onclick = function(e){
+ if(e.target.id === "modal"){
+  document.getElementById("modal").style.display="none";
+ }
 }
 
 render();
