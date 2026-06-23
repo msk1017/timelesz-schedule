@@ -66,12 +66,13 @@ button{
 
 /* モーダル */
 .modal{
-  display:none;
-  position:fixed;
+  display:none;none;
+  position:fixed;fixed;
   inset:0;
   background:rgba(0,0,0,.4);
   justify-content:center;
   align-items:center;
+  z-index:9999;
 }
 
 .modal-box{
@@ -79,6 +80,8 @@ button{
   padding:15px;
   border-radius:14px;
   width:85%;
+  position:relative;
+  z-index:10000;
 }
 
 .event{
