@@ -66,8 +66,8 @@ button{
 
 /* モーダル */
 .modal{
-  display:none;none;
-  position:fixed;fixed;
+  display:none;
+  position:fixed;
   inset:0;
   background:rgba(0,0,0,.4);
   justify-content:center;
@@ -82,6 +82,9 @@ button{
   width:85%;
   position:relative;
   z-index:10000;
+}
+.modal *{
+  pointer-events:auto
 }
 
 .event{
